@@ -61,7 +61,7 @@ const processAccount = async contentsUrl => {
     await groups.updatePolicies(groupsData, assumedIam);
 
   } catch (err) {
-    console.err(err);
+    console.error(err);
   }
 }
 
