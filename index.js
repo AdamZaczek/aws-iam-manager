@@ -1,4 +1,5 @@
-'use strict';
+/* eslint-disable no-console, no-shadow */
+/* eslint max-statements: off */
 
 const YAML = require('js-yaml');
 const axios = require('axios');
@@ -13,26 +14,26 @@ const log = bunyan.createLogger({
   name: 'aws-iam-manager',
 });
 
-const Elasticsearch = require('bunyan-elasticsearch');
-const esStream = new Elasticsearch({
-  indexPattern: '[logstash-]YYYY.MM.DD',
-  type: 'logs',
-  host: 'localhost:9200'
-});
-
 const getAuth = () => process.env.GITHUB_ACCESS_TOKEN &&
   `?access_token=${process.env.GITHUB_ACCESS_TOKEN}`;
 
-async function getJson(url) {
+const getJson = async url => {
   log.info({ url }, 'Downloading...');
 
   const { data } = await axios.get(`${url}${getAuth()}`);
   const formattedData = new Buffer(data.content, data.encoding).toString('ascii');
+
   return YAML.load(formattedData);
 }
 
-async function processAccount(contentsUrl) {
+/**
+ * Process data from Github repo.
+ * @param {contentsUrl} Url containing data
+ */
+
+const processAccount = async contentsUrl => {
   const accountName = contentsUrl.split('/').slice(-1)[0].split('?')[0];
+
   log.info({ contentsUrl, accountName }, 'Processing account...');
 
   try {
@@ -59,10 +60,10 @@ async function processAccount(contentsUrl) {
     await groups.update(groupsData, assumedIam);
     await groups.updatePolicies(groupsData, assumedIam);
 
-  } catch(err) {
-    console.log(err);
+  } catch (err) {
+    console.err(err);
   }
-};
+}
 
 module.exports.handler = (event, context, callback) => {
   const returnError = error => {
@@ -94,5 +95,3 @@ module.exports.handler = (event, context, callback) => {
       .catch(returnError);
   });
 };
-
-
