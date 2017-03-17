@@ -1,5 +1,3 @@
-'use strict';
-
 const Promise = require('bluebird');
 const AWS = require('aws-sdk');
 const bunyan = require('bunyan');
@@ -34,22 +32,24 @@ const createGroup = (GroupName, iam) => new Promise((resolve, reject) => {
   }).promise().then(resolve).catch(reject);
 });
 
-async function attachGroupPolicy (GroupName, PolicyName, iam) {
+const attachGroupPolicy = async (GroupName, PolicyName, iam) => {
   log.info({ GroupName, PolicyName }, 'Attaching policy to group');
 
   const policies = await getPolicyArn(PolicyName, iam);
+
   if (policies.length === 0) {
     log.error({ PolicyName }, 'Requested policy not found!');
   }
 
   const PolicyArn = policies[0].Arn;
+
   log.info({ PolicyArn, PolicyName, GroupName }, 'Policy ARN attached');
 
   return iam.attachGroupPolicy({
     GroupName,
     PolicyArn,
   }).promise();
-};
+}
 
 const reassignUsers = (data, group, iam) => new Promise((resolve, reject) => {
   const oldGroupUsers = data.Users.map(u => u.UserName);
@@ -92,7 +92,7 @@ const forgeNewGroup = (group, error, iam) => new Promise((resolve, reject) => {
 });
 
 const update = (json, iam) => new Promise((resolve, reject) => {
-  log.info({ newData: json}, 'Updating groups...');
+  log.info({ newData: json }, 'Updating groups...');
 
   const promises = json.groups.map(group =>
     iam.getGroup({ GroupName: group.name }).promise().then(data => {
@@ -110,7 +110,7 @@ const update = (json, iam) => new Promise((resolve, reject) => {
 });
 
 const updatePolicies = (json, iam) => {
-  log.info({ newData: json}, 'Updating group policies...');
+  log.info({ newData: json }, 'Updating group policies...');
 
   const attachPolicyRequests = json.groups.map(group =>
     attachGroupPolicy(group.name, group.policy, iam));
