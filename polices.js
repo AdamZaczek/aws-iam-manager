@@ -1,7 +1,4 @@
-'use strict';
-
 const Promise = require('bluebird');
-const AWS = require('aws-sdk');
 const bunyan = require('bunyan');
 
 const log = bunyan.createLogger({ name: 'polices' });
@@ -16,7 +13,7 @@ const createPolicy = (PolicyName, PolicyDocument, iam) => new Promise((resolve, 
   }).promise().then(resolve).catch(reject);
 });
 
-async function getPolicyArn(PolicyName, iam) {
+const getPolicyArn = async (PolicyName, iam) => {
   log.info({ PolicyName }, 'Getting policy...');
 
   const payload = await iam.listPolicies({
@@ -26,7 +23,7 @@ async function getPolicyArn(PolicyName, iam) {
   return payload.Policies.filter(policy => policy.PolicyName === PolicyName);
 };
 
-async function detachFromAllEntities(PolicyArn, iam) {
+const detachFromAllEntities = async (PolicyArn, iam) => {
   const entitiesWithAttachedPolicy = await iam.listEntitiesForPolicy({
     PolicyArn,
     PathPrefix: process.env.USERS_PATH,
@@ -40,10 +37,10 @@ async function detachFromAllEntities(PolicyArn, iam) {
 
   log.info({ entitiesWithAttachedPolicy, PolicyArn }, 'Policy detached from requested entities');
 
-  return await Promise.all(detachRequests);
+  await Promise.all(detachRequests);
 }
 
-async function removePolicy (PolicyArn, iam) {
+const removePolicy = async (PolicyArn, iam) => {
   log.info({ PolicyArn }, 'Deleting old policy...');
   await detachFromAllEntities(PolicyArn, iam);
   return iam.deletePolicy({ PolicyArn }).promise();

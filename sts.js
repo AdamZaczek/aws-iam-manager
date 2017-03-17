@@ -1,11 +1,12 @@
+/* eslint-disable camelcase  */
+
 const AWS = require('aws-sdk');
 const bunyan = require('bunyan');
-const sts = new AWS.STS();
 const dynamodb = new AWS.DynamoDB();
 
 const log = bunyan.createLogger({ name: 'sts' });
 
-const dynamoDbQueryParams = (accountName) => ({
+const dynamoDbQueryParams = accountName => ({
   TableName: 'aim_roles',
   Key: {
     account_name: {
@@ -14,7 +15,7 @@ const dynamoDbQueryParams = (accountName) => ({
   },
 });
 
-async function assumeRole(accountName) {
+const assumeRole = async accountName => {
   log.info({ accountName }, 'Getting RoleARN');
 
   const dynamoDbItem = await dynamodb.getItem(dynamoDbQueryParams(accountName)).promise();
@@ -35,4 +36,3 @@ async function assumeRole(accountName) {
 module.exports = {
   assumeRole,
 };
-
